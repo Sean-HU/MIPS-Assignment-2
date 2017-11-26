@@ -1,17 +1,4 @@
-# HEXADECIMAL TO DECIMAL CONVERTER, by Sean Mills
-# $t0: sum
-# $t1: address
-# $t2: length
-# $t3: character
-# $t4: power
-# $t5: x, (16^n)
-# $t6: mult, the value of the hexadecimal digit in string (0, 1, 2,...,15)
-# $t7: product
-# $t8: quotient, and also the characters, '0'-'9' and 'A'-'F'
-# $t9: remainder, and also the characters, 'a'-'f'
-# decimal integer = (x * mult0) + (x * mult1) +...+ (x * multn)
-	
-	.text
+.text
 main:
 	la $a0, hex_str
 	li $a1, 10
@@ -23,13 +10,13 @@ main:
 	add $t2, $zero, $zero			# intialize length
 
 # check for spaces before, between, and after digits
-space_check:									
+subprogram_2:									
 	lb $t3, ($t1)
 	beq $t3, 10, error							# if there are no digits, display error message
 	beqz $t3, error
 	bne $t3, 32, check_for_space_after_char		# once a character is found that is not a space or \n,
 	add $t1, $t1, 1
-	b space_check
+	b subprogram_2
 check_for_space_after_char:						# check for spaces after that character
 	lb $t3, ($t1)
 	beq $t3, 10, end_space_check				# if there are no spaces after that, proceed with the program
@@ -70,7 +57,26 @@ check_loop:
 	add $t4, $zero, $zero			# initialize power
 	add $t5, $zero, 1				# set x to 1
 	lb $t3, ($t1)					# load byte from address
-	j subprogram_1
+	j subprogram_1				# check what the character is
+power_loop:
+	beq $t4, $t2, end_power_loop	# if power == length, then end loop
+	mulou $t5, $t5, 16				# x = x * 16
+	addi $t4, $t4, 1				# increment power
+	b power_loop					# and repeat
+end_power_loop:
+	beqz $t2, set_x_to_one			# if the string entered had only one character,
+	j sum
+set_x_to_one:
+	addi $t5, $zero, 1				# set x to 1
+sum:
+	mulou $t7, $t5, $t6				# product = x * mult
+	add $t0, $t0, $t7				# sum += product
+	addi $t1, $t1, 1				# increment address to move to the next character
+	beqz $t2, print_decimal			# when length is 0, print decimal and exit
+	sub $t2, $t2, 1					# decrement length
+	b check_loop					# repeat check_loop
+
+
 exit:
 	li $v0, 10						# exit
 	syscall
@@ -101,8 +107,3 @@ check_letters:
 	add $t9, $t9, 1					# increment $t9
 	add $t6, $t6, 1					# increment mult
 	b check_letters					# and repeat
-
-	.data
-hex_str: .space 10
-new_line: .asciiz "\n"
-error_msg: .asciiz "Invalid hexadecimal number."
