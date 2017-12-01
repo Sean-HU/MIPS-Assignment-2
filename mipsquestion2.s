@@ -11,20 +11,32 @@ main_loop:
 	add $s1, $s0, $zero				# store address of list of hex string in $s1 as well
 find_end:
 	lb $t0, ($s1)
-	beq $s1, 130, end_find			# when $t0 is ',' end search
-	beq $s1, 10, end_find			# when $t0 is '\n' end search
-	beqz $s1, end_find				# when $t0 is null end search
+	beq $t0, 44, end_find			# when $t0 is ',' end_find
+	beq $t0, 10, end_find			# when $t0 is '\n' end_find
+	beqz $t0, end_find				# when $t0 is null end_find
 	add $s1, $s1, 1					# otherwise, repeat
+	b find_end
 end_find:
 	addi $sp, $sp, -12				# adjust stack for 2 items
 	add $a0, $s0, $zero				# pass the beginning of hex val
-	add $s2, $zero, $s1
 	jal subprogram_2
 	sw $s1, 8($sp)
 	jal subprogram_3
+	lw $s1, 8($sp)
+	lb $t0, ($s1)
 	addi $sp, $sp, 12
-	bne $s2, 130, exit
+	bne $t0, 44, exit
 	add $s0, $s1, 1
+	add $t0, $zero, $zero
+	add $t1, $zero, $zero
+	add $t2, $zero, $zero
+	add $t3, $zero, $zero
+	add $t4, $zero, $zero
+	add $t5, $zero, $zero
+	add $t6, $zero, $zero
+	add $t7, $zero, $zero
+	add $t8, $zero, $zero
+	add $t9, $zero, $zero
 	b main_loop
 exit:
 	li $v0, 10						# exit
@@ -41,7 +53,7 @@ subprogram_2:
 space_check:									
 	lb $t3, ($t1)
 	beq $t3, 10, nan							# if there are no digits, display error message
-	beq $t3, 130, nan
+	beq $t3, 44, nan
 	beqz $t3, nan
 	bne $t3, 9, check_if_not_space1				# if character is not a tab, check if it's neither a space
 	b dont_check1
@@ -52,7 +64,7 @@ dont_check1:
 	b space_check
 check_for_space_after_char:						# check for spaces after that character
 	lb $t3, ($t1)
-	beq $t3, 130, end_space_check
+	beq $t3, 44, end_space_check
 	beq $t3, 10, end_space_check				# if there are no spaces after that, proceed with the program
 	beqz $t3, end_space_check
 	beq $t3, 9, check_for_char_after_space
@@ -63,7 +75,7 @@ check_for_char_after_space:
 	lb $t3, ($t1)
 	beq $t3, 10, end_space_check				# if there are no more non-space characters, proceed with the program
 	beqz $t3, end_space_check
-	beq $t3, 130, end_space_check
+	beq $t3, 44, end_space_check
 	bne $t3, 9, check_if_not_space2
 	b dont_check2
 check_if_not_space2:
@@ -80,7 +92,7 @@ length_loop:
 	
 	beqz $t3, sub_length1			# if character is null, branch to sub_length
 	beq $t3, 10, sub_length2		# if character is '\n' branch to sub_length2
-	beq $t3, 130, sub_length2		# if character is ',' branch to sub_length2
+	beq $t3, 44, sub_length2		# if character is ',' branch to sub_length2
 	
 	beq $t3, 32, skip_increment		# if the character is a space, do not increment length
 	beq $t3, 9, skip_increment		# if the character is a tab, do not increment length
@@ -107,7 +119,11 @@ check_loop:
 	jal subprogram_1
 	add $t6, $zero, $v0
 	beq $t6, -1, nan
-	beq $t6, 16, check_loop
+	beq $t6, 16, next_char
+	b power_loop
+next_char:
+	add $t1, $t1, 1
+	b check_loop
 power_loop:
 	beq $t4, $t2, end_power_loop	# if power == length, then end loop
 	mulou $t5, $t5, 16				# x = x * 16
@@ -134,8 +150,8 @@ too_large:
 	la $a0, too_large_msg		# get address of "too large"
 	add $t0, $zero, $a0			# store address in $t0
 return_full_int:
-	sw $t0, 4($sp)
 	lw $ra, 0($sp)
+	sw $t0, 4($sp)
 	jr $ra
 
 
@@ -181,8 +197,8 @@ return_char:
 	jr $ra
 	
 subprogram_3:
-	lw $t0, 4($sp)
 	lw $t1, 8($sp)
+	lw $t0, 4($sp)
 	la $a0, nan_msg				# display error message if input is invalid
 	beq $t0, $a0, print_error_str
 	la $a0, too_large_msg
@@ -204,8 +220,9 @@ print_error_str:
 	li $v0, 4
 	syscall
 print_comma:
-	beq $t1, 10, return
-	beqz $t1, return
+	lb $t2, ($t1)
+	beq $t2, 10, return
+	beqz $t2, return
 	la $a0, comma				# print a comma
 	li $v0, 4
 	syscall
