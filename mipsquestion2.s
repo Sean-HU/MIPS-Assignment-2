@@ -33,9 +33,9 @@ find_end:
 end_find:
 	addi $sp, $sp, -12				# adjust stack for 3 items: return address, deimal int, and end of hex value
 	add $a0, $s0, $zero				# pass the beginning of hex val
-	jal subprogram_2				# to subprogram_2
+	jal subprogram_2				# to subprogram 2
 	sw $s1, 8($sp)					# push the address of the end of a hex value to the stack
-	jal subprogram_3				# call subprogram_3
+	jal subprogram_3				# pass it to subprogram 3
 	lb $t0, ($s1)					
 	addi $sp, $sp, 12				# destruct stack
 	bne $t0, 44, exit				# if the end of that hex value is also the end of the entire string, exit
@@ -51,10 +51,10 @@ exit:
 subprogram_2:
 # gets address of the first character of the hex value and converts the entire hex value
 # it uses this address to also find the end of the value
-	add $t0, $zero, $zero			# initialize sum
-	add $t1, $zero, $a0				# store address of hex string in $t1
-	add $t2, $zero, $zero			# intialize length
-	sw $ra, 0($sp)					# save return address
+	add $t0, $zero, $zero						# initialize sum
+	add $t1, $zero, $a0							# store address of hex string in $t1
+	add $t2, $zero, $zero						# intialize length
+	sw $ra, 0($sp)								# save return address
 # check for spaces before, between, and after digits
 space_check:									
 	lb $t3, ($t1)
@@ -186,7 +186,7 @@ skip_char:
 	add $v0, $zero, 16				# set return value to 16, so the program knows the character is a space or tab
 	b return_int
 set_int:
-	add $v0, $t6, $zero				# store decimal integer in return value
+	add $v0, $t6, $zero				# store decimal integer as return value
 return_int:
 	jr $ra							# return
 
