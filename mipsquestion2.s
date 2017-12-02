@@ -1,4 +1,5 @@
 # HEXADECIMAL TO DECIMAL CONVERTER, by Sean Mills
+# Tmp registers used:
 # $t0: sum
 # $t1: address
 # $t2: length ( or end of a hex value in subprogram 3)
@@ -48,9 +49,16 @@ exit:
 	li $v0, 10						# exit
 	syscall
 
-subprogram_2:
+########################################################################### Subprogram 2
 # gets address of the first character of the hex value and converts the entire hex value
 # it uses this address to also find the end of the value
+# Arg register used: $a0
+# Tmp registers used: $t0, $t1, $t2, $t3, $t4, $t5, $t6, $t7
+# Post: stack contains decimal integer
+# returns decimal integer
+# called by main
+# calls subprogram_1
+subprogram_2:
 	add $t0, $zero, $zero						# initialize sum
 	add $t1, $zero, $a0							# store address of hex string in $t1
 	add $t2, $zero, $zero						# intialize length
@@ -153,8 +161,15 @@ return_full_int:
 	sw $t0, 4($sp)				# push the decimal value to be returned, to the stack
 	jr $ra						# return
 
-subprogram_1:
+################################################################## Subprogram 1
 # get a hex character from subprogram 2, converts it to decimal, and returns it
+# Arg register used: $a0
+# Tmp registers used: $t3, $t6, $t9
+# Post: $v0 contains decimal integer of one hex character
+# returns decimal integer
+# called by subprogram_2
+# calls: none
+subprogram_1:
 	add $t3, $a0, $zero				# get character from parameter
 check_characters1:					
 	beq $t3, 32, skip_char			# if character is a space,
@@ -190,9 +205,16 @@ set_int:
 return_int:
 	jr $ra							# return
 
-subprogram_3:
+################################################################################# Subprogram 3
 # gets decimal integer (or address of error message) and address end of hex value from main
 # it uses the address of the end of that hex value, to determine if it should also print a ','
+# Arg register used: $a0 (for printing)
+# Tmp registers used: $t0, $t1, $t2, $t8, $t9
+# Post: none
+# returns: void
+# called by main
+# calls: none
+subprogram_3:
 	lw $t1, 8($sp)					# get address of end of hex value (',' or '\n') from stack
 	lw $t0, 4($sp)					# get decimal integer (or address of error message) from stack
 	la $a0, nan_msg					
@@ -219,14 +241,13 @@ print_comma:
 	lb $t2, ($t1)					# get character at the end of that hex value entered
 	beq $t2, 10, return				# if it is the end of the entire list, return
 	beqz $t2, return				
-	la $a0, comma					# otherwise, print ',' then return
-	li $v0, 4
+	la $a0, 44						# otherwise, print ',' then return
+	li $v0, 11
 	syscall
 return:
 	jr $ra							# return
 
-	.data
-comma: .asciiz ","					
+	.data				
 hex_str: .space 1002
 new_line: .asciiz "\n"
 nan_msg: .asciiz "NaN"
